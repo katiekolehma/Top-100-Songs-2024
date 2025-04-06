@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Top 100 Songs of 2024</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body { font-family: sans-serif; background: #fff0f5; margin: 40px; }
+    h1 { text-align: center; color: #c71585; }
+    .tooltip {
+      position: absolute;
+      background: #fff;
+      padding: 6px 12px;
+      border: 1px solid #c71585;
+      border-radius: 4px;
+      pointer-events: none;
+      font-size: 13px;
+      box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+    }
+    svg {
+      display: block;
+      margin: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Top 100 Songs of 2024</h1>
+  <svg width="1000" height="1200"></svg>
+  <div class="tooltip" style="opacity: 0;"></div>
+
+  <script>
+    const svg = d3.select("svg");
+    const tooltip = d3.select(".tooltip");
+
+    d3.csv("topsongs2024.csv").then(data => {
+      const genreColor = d3.scaleOrdinal()
+        .domain([...new Set(data.map(d => d.Genre))])
+        .range([
+          "#ffc0cb", "#ffb6c1", "#ff69b4", "#ff1493", "#db7093",
+          "#c71585", "#e75480", "#f4c2c2", "#faafbe", "#f88379"
+        ]);
+
+      const gridSize = 90;
+      const circleRadius = 20;
+      const padding = 50;
+
+      svg.selectAll("circle")
+        .data(data)
+        .enter()
+        .append("circle")
+        .attr("cx", (d, i) => (i % 10) * gridSize + padding)
+        .attr("cy", (d, i) => Math.floor(i / 10) * gridSize + padding)
+        .attr("r", circleRadius)
+        .attr("fill", d => genreColor(d.Genre))
+        .attr("stroke", "#fff")
+        .attr("stroke-width", 1)
+        .on("mouseover", (event, d) => {
+          tooltip.transition().duration(200).style("opacity", 0.95);
+          tooltip.html(
+            `<strong>#${d.Rank}</strong><br>${d.Title}<br>${d.Artist}<br><em>${d.Genre}</em>`
+          )
+          .style("left", (event.pageX + 15) + "px")
+          .style("top", (event.pageY - 28) + "px");
+        })
+        .on("mouseout", () => {
+          tooltip.transition().duration(300).style("opacity", 0);
+        });
+
+      // Title labels
+      svg.selectAll("text")
+        .data(data)
+        .enter()
+        .append("text")
+        .attr("x", (d, i) => (i % 10) * gridSize + padding)
+        .attr("y", (d, i) => Math.floor(i / 10) * gridSize + padding + circleRadius + 12)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "10px")
+        .attr("fill", "#333")
+        .text(d => d.Rank);
+    });
+  </script>
+</body>
+</html>
+
